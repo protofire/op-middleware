@@ -9,8 +9,8 @@
     "prettier-format": "prettier --config .prettierrc.json 'src/**/*.ts' --write",
     "start": "npm run build && node build/server.js",
     "start:dev": "nodemon --watch src -e ts,js --exec 'ts-node ./src/server.ts'",
-    "test": "jest --coverage --silent",
-    "test:watch": "jest --coverage --watch"
+    "test": "NODE_ENV=test jest --coverage --silent",
+    "test:watch": "NODE_ENV=test jest --coverage --watch"
   },
   "repository": {
     "type": "git",
@@ -55,8 +55,8 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/build/"
+      "<rootDir>/node_modules/",
+      "<rootDir>/build/"
     ]
   }
 }

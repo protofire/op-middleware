@@ -62,10 +62,10 @@ server.on('error', function onError(error: NodeJS.ErrnoException): void {
   switch (error.code) {
     case 'EACCES':
       logger('Required elevated privileges')
-      return process.exit(1)
+      process.exit(1) // eslint-disable-next-line
     case 'EADDRINUSE':
       logger(`Port ${port} is already in use`)
-      return process.exit(1)
+      process.exit(1) // eslint-disable-next-line
     default:
       throw error
   }
