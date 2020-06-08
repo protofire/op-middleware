@@ -35,6 +35,13 @@ Build the project and run it:
 npm run start
 ```
 
+Run unit tests/run tests in watch mode:
+
+```
+npm test
+npm run test:watch
+```
+
 For more information, check the `script` attribute in the `package.json` file.
 
 ## Maintainers
