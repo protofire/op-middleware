@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express'
+import cors from 'cors'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import { getLogger } from './util/logger'
@@ -20,16 +21,7 @@ if (!isTestEnv) {
 }
 
 const app = express()
-// Setup CORS
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-  )
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
-  next()
-})
+app.use(cors)
 // Setub basic endpoint logging + JSON body parser
 if (!isTestEnv) {
   app.use(morgan('dev'))
