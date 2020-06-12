@@ -8,22 +8,21 @@ import { Upload } from './model/upload'
 import { MongooseDB } from './util/db'
 import { statusRouter } from './routes/status'
 import { storageRouter } from './routes/storage'
+import { port, dbUri } from './config'
 
-const port = process.env.PORT || 3000
-const dbUri = process.env.DB_URI || 'mongodb://localhost:27017/op_middleware'
-const isTestEnv = process.env.NODE_ENV === 'test'
 const logger = getLogger('app')
 
 export const app = express()
 
-if (!isTestEnv) {
-  // Setup DB
+// Setup DB in model when not in test env
+if (process.env.NODE_ENV !== 'test') {
   const db = new MongooseDB(dbUri)
   Upload.setDb(db)
-  // Setub cors, endpoint logging + JSON body parser
-  app.use(cors)
-  app.use(morgan('dev'))
 }
+
+// Setub basic endpoint logging, cors & JSON body parser
+app.use(morgan('dev'))
+app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 

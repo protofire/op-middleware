@@ -5,7 +5,8 @@ import { app } from '../../src/server'
 import { getClient } from '../../src/util/pow'
 import { Upload } from '../../src/model/upload'
 import { MockedDB } from '../util/mockedDb'
-import { uploadsPath, uploadField } from '../../src/middlewares/multerUpload'
+import { uploadField } from '../../src/middlewares/multerUpload'
+import { uploadPath } from '../../src/config'
 
 beforeEach(() => {
   const db = new MockedDB()
@@ -49,7 +50,7 @@ describe('POST /storage', () => {
     expect(rbJob).toEqual({ jobId, cid })
     const rbFile = r.body.file
     expect(rbFile.size).toEqual(f.content.length)
-    expect(readFileSync(`${uploadsPath}/${rbFile.name}`, 'utf8')).toEqual(
+    expect(readFileSync(`${uploadPath}/${rbFile.name}`, 'utf8')).toEqual(
       f.content,
     )
     const r2 = await request(server).get(`/storage/${cid}`)

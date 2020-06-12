@@ -1,17 +1,11 @@
 import multer from 'multer'
+import { uploadPath, uploadMaxSize } from '../config'
 
-// Default upload path is relative to the app
-export const uploadsPath = process.env.UPLOADS_PATH || 'uploads'
-
-export const maxFileSize =
-  process.env.MAX_FILE_SIZE !== undefined
-    ? Number.parseInt(process.env.MAX_FILE_SIZE, 10)
-    : 1024 * 1024 * 10
 export const uploadField = 'file'
 
 export const multerUpload = multer({
-  dest: `${uploadsPath}/`,
+  dest: `${uploadPath}/`,
   limits: {
-    fileSize: maxFileSize,
+    fileSize: uploadMaxSize,
   },
 })
