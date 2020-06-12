@@ -1,15 +1,11 @@
 import request from 'supertest'
 import mockfs from 'mock-fs'
 import { readFileSync } from 'fs'
-import { server } from '../../src/server'
+import { app } from '../../src/server'
 import { getClient } from '../../src/util/pow'
 import { Upload } from '../../src/model/upload'
 import { MockedDB } from '../util/mockedDb'
 import { uploadsPath, uploadField } from '../../src/middlewares/multerUpload'
-
-afterAll((done) => {
-  server.close(done)
-})
 
 beforeEach(() => {
   const db = new MockedDB()
@@ -18,6 +14,8 @@ beforeEach(() => {
 afterEach(() => {
   mockfs.restore()
 })
+const server = app.listen()
+afterAll((done) => server.close(done))
 
 describe('POST /storage', () => {
   const ffsToken = 'aFfsToken'

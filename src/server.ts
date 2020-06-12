@@ -14,16 +14,14 @@ const dbUri = process.env.DB_URI || 'mongodb://localhost:27017/op_middleware'
 const isTestEnv = process.env.NODE_ENV === 'test'
 const logger = getLogger('app')
 
-// Setup DB
+export const app = express()
+
 if (!isTestEnv) {
+  // Setup DB
   const db = new MongooseDB(dbUri)
   Upload.setDb(db)
-}
-
-const app = express()
-app.use(cors)
-// Setub basic endpoint logging + JSON body parser
-if (!isTestEnv) {
+  // Setub cors, endpoint logging + JSON body parser
+  app.use(cors)
   app.use(morgan('dev'))
 }
 app.use(bodyParser.json())
@@ -56,23 +54,25 @@ app.use(
   },
 )
 
-// Start server
-export const server = app.listen(port)
-server.on('listening', function onListening(): void {
-  logger(`Server listening on port ${port}`)
-})
-server.on('error', function onError(error: NodeJS.ErrnoException): void {
-  if (error.syscall !== 'listen') {
-    throw error
-  }
-  switch (error.code) {
-    case 'EACCES':
-      logger('Required elevated privileges')
-      process.exit(1) // eslint-disable-next-line
-    case 'EADDRINUSE':
-      logger(`Port ${port} is already in use`)
-      process.exit(1) // eslint-disable-next-line
-    default:
+// Start server (start listening only if outside tests)
+if (!module.parent) {
+  const server = app.listen(port)
+  server.on('listening', function onListening(): void {
+    logger(`Server listening on port ${port}`)
+  })
+  server.on('error', function onError(error: NodeJS.ErrnoException): void {
+    if (error.syscall !== 'listen') {
       throw error
-  }
-})
+    }
+    switch (error.code) {
+      case 'EACCES':
+        logger('Required elevated privileges')
+        process.exit(1) // eslint-disable-next-line
+      case 'EADDRINUSE':
+        logger(`Port ${port} is already in use`)
+        process.exit(1) // eslint-disable-next-line
+      default:
+        throw error
+    }
+  })
+}
