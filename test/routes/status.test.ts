@@ -1,10 +1,9 @@
 import request from 'supertest'
-import { server } from '../../src/server'
+import { app } from '../../src/server'
 import { getClient } from '../../src/util/pow'
 
-afterAll((done) => {
-  server.close(done)
-})
+const server = app.listen()
+afterAll((done) => server.close(done))
 
 describe('GET /status', () => {
   it('responds with success', async () => {

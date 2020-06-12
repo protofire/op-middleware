@@ -1,12 +1,11 @@
 import request from 'supertest'
-import { server } from '../src/server'
+import { app } from '../src/server'
 import { getClient } from '../src/util/pow'
 
-afterAll((done) => {
-  server.close(done)
-})
-
 describe('general server config', () => {
+  const server = app.listen()
+  afterAll((done) => server.close(done))
+
   it('responds with 404 to not found endpoints', async () => {
     const r = await request(server).get('/somerandonenpoint')
     expect(r.status).toBe(404)

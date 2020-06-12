@@ -1,32 +1,35 @@
 import express, { Request, Response, NextFunction } from 'express'
+import cors from 'cors'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import { getLogger } from './util/logger'
 import { ErrorStatus } from './util/errorStatus'
+import { Upload } from './model/upload'
+import { MongooseDB } from './util/db'
 import { statusRouter } from './routes/status'
+import { storageRouter } from './routes/storage'
+import { port, dbUri } from './config'
 
-const port = process.env.PORT || 3000
 const logger = getLogger('app')
 
-const app = express()
-// Setup CORS
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-  )
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
-  next()
-})
-// Setub basic endpoint logging + JSON body parser
+export const app = express()
+
+// Setup DB in model when not in test env
 if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('dev'))
+  const db = new MongooseDB(dbUri)
+  Upload.setDb(db)
 }
+
+// Setub basic endpoint logging, cors & JSON body parser
+app.use(morgan('dev'))
+app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
+
 // App routes
 app.use('/status', statusRouter)
+app.use('/storage', storageRouter)
+
 // Catch 404 errors
 app.use((req, res, next) => {
   const error = new ErrorStatus('Not found', 404)
@@ -50,23 +53,25 @@ app.use(
   },
 )
 
-// Start server
-export const server = app.listen(port)
-server.on('listening', function onListening(): void {
-  logger(`Server listening on port ${port}`)
-})
-server.on('error', function onError(error: NodeJS.ErrnoException): void {
-  if (error.syscall !== 'listen') {
-    throw error
-  }
-  switch (error.code) {
-    case 'EACCES':
-      logger('Required elevated privileges')
-      process.exit(1) // eslint-disable-next-line
-    case 'EADDRINUSE':
-      logger(`Port ${port} is already in use`)
-      process.exit(1) // eslint-disable-next-line
-    default:
+// Start server (start listening only if outside tests)
+if (!module.parent) {
+  const server = app.listen(port)
+  server.on('listening', function onListening(): void {
+    logger(`Server listening on port ${port}`)
+  })
+  server.on('error', function onError(error: NodeJS.ErrnoException): void {
+    if (error.syscall !== 'listen') {
       throw error
-  }
-})
+    }
+    switch (error.code) {
+      case 'EACCES':
+        logger('Required elevated privileges')
+        process.exit(1) // eslint-disable-next-line
+      case 'EADDRINUSE':
+        logger(`Port ${port} is already in use`)
+        process.exit(1) // eslint-disable-next-line
+      default:
+        throw error
+    }
+  })
+}

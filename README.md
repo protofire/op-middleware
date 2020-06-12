@@ -23,7 +23,13 @@ npm install
 
 ## Usage
 
-Start the development server:
+op-middleware is an expressed/nodejs application that relies on Textile's Powergate and MongoDB (via Mongoose).
+
+The development environment is assumed to be running [Powergate's devnet setup](https://docs.textile.io/powergate/devnet/#devnet-with-powergate) plus a MongoDB instance. The setup of the components is clearly documented on each project's repository/website but a [`docker-compose.yaml`](https://gist.github.com/unjapones/49a3ed76ef04472bc3cf1da512f4eb60) file has been created to make the development environment setup easier (although the maintenance of the docker-compose file is not guaranteed).
+
+To configure the port that `op-middleware` will listen on for requests, the Powergate server URI, MongoDB connection URI and other environmental values check the file `src/config.ts`.
+
+Once the development environment is ready, `op-middleware` can be started in development mode running the following:
 
 ```
 npm run start:dev
