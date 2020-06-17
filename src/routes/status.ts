@@ -9,7 +9,7 @@ export async function getStatus(
 ): Promise<void> {
   const logger = getLogger('router:status/getStatus')
   try {
-    const pow = getClient() as PowClient
+    const pow = (await getClient()) as PowClient
     const health = await pow.health.check()
     logger(health)
     const { status } = health

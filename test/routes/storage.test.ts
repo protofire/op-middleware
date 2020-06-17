@@ -2,15 +2,17 @@ import request from 'supertest'
 import mockfs from 'mock-fs'
 import { readFileSync } from 'fs'
 import { app } from '../../src/server'
-import { getClient } from '../../src/util/pow'
+import { setClient } from '../../src/util/pow'
 import { Upload } from '../../src/model/upload'
-import { MockedDB } from '../util/mockedDb'
+import { Ffs } from '../../src/model/ffs'
+import { MockedDB } from '../util/__mocks__/db'
 import { uploadField } from '../../src/middlewares/multerUpload'
 import { uploadPath } from '../../src/config'
 
 beforeEach(() => {
   const db = new MockedDB()
   Upload.setDb(db)
+  Ffs.setDb(db)
 })
 afterEach(() => {
   mockfs.restore()
@@ -33,7 +35,7 @@ describe('POST /storage', () => {
     },
     setToken: () => null,
   }
-  getClient(mockedClient)
+  setClient(mockedClient)
 
   it('responds with success', async () => {
     const f = {
@@ -68,7 +70,6 @@ describe('GET /storage/:cid', () => {
     const cid = 'aCid'
     const u = new Upload({
       cid,
-      ffsToken: 'aFfsToken',
       jobId: 'aJobId',
       jobStatus: 'NEW',
     })

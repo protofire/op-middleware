@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { app } from '../src/server'
-import { getClient } from '../src/util/pow'
+import { setClient } from '../src/util/pow'
 
 describe('general server config', () => {
   const server = app.listen()
@@ -12,7 +12,7 @@ describe('general server config', () => {
   })
   it('responds with 500 when handling errors', async () => {
     const mockedClient = {}
-    getClient(mockedClient)
+    setClient(mockedClient)
     const r = await request(server).get('/status')
     expect(r.status).toBe(500)
   })

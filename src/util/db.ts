@@ -1,14 +1,11 @@
 import { Schema, Document, model, connect } from 'mongoose'
-import { Upload, DB } from '../model/upload'
+import { IUpload, Upload } from '../model/upload'
+import { IFfs } from '../model/ffs'
 import { getLogger } from './logger'
 
 const logger = getLogger('util:db')
 
 const UploadSchema = new Schema({
-  ffsToken: {
-    type: 'string',
-    required: true,
-  },
   cid: {
     type: 'string',
     required: true,
@@ -26,6 +23,27 @@ const UploadSchema = new Schema({
 type UploadDocument = Upload & Document
 const UploadModel = model<UploadDocument>('Upload', UploadSchema)
 
+const FfsSchema = new Schema({
+  id: {
+    type: 'string',
+    required: true,
+  },
+  token: {
+    type: 'string',
+    required: true,
+  },
+})
+
+type FfsDocument = IFfs & Document
+const FfsModel = model<FfsDocument>('Ffs', FfsSchema)
+
+export interface DB {
+  saveUpload: (u: Upload) => Promise<unknown>
+  getUploadByCid: (cid: string) => Promise<IUpload>
+  saveFfs: (f: IFfs) => Promise<unknown>
+  getFfs: () => Promise<IFfs>
+}
+
 export class MongooseDB implements DB {
   constructor(uri: string) {
     const options = {
@@ -42,19 +60,21 @@ export class MongooseDB implements DB {
     })
   }
 
+  // @FIXME: should accept IUpload
   async saveUpload(u: Upload): Promise<boolean> {
     try {
       const um = new UploadModel(u)
       await um.save()
       return true
     } catch (err) {
-      logger(`Error saving ${JSON.stringify(u)}`)
+      logger(`Error saving upload ${JSON.stringify(u)}`)
       logger(err)
       return false
     }
   }
 
-  async getUploadByCid(cid: string): Promise<Upload> {
+  // @FIXME: should return IUpload
+  async getUploadByCid(cid: string): Promise<IUpload> {
     try {
       const r = await UploadModel.findOne({ cid })
       if (r === null) {
@@ -63,6 +83,31 @@ export class MongooseDB implements DB {
       return new Upload(r)
     } catch (err) {
       logger(`Error retrieving upload with cid ${cid}`)
+      logger(err)
+      throw err
+    }
+  }
+
+  async saveFfs(f: IFfs): Promise<unknown> {
+    try {
+      const fm = new FfsModel(f)
+      return await fm.save()
+    } catch (err) {
+      logger(`Error saving ffs ${JSON.stringify(f)}`)
+      logger(err)
+      return false
+    }
+  }
+
+  async getFfs(): Promise<IFfs> {
+    try {
+      const f = await FfsModel.findOne()
+      if (f === null) {
+        throw new Error(`Could not find ffs in db`)
+      }
+      return f
+    } catch (err) {
+      logger(`Error retrieving ffs`)
       logger(err)
       throw err
     }

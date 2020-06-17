@@ -5,6 +5,7 @@ import bodyParser from 'body-parser'
 import { getLogger } from './util/logger'
 import { ErrorStatus } from './util/errorStatus'
 import { Upload } from './model/upload'
+import { Ffs } from './model/ffs'
 import { MongooseDB } from './util/db'
 import { statusRouter } from './routes/status'
 import { storageRouter } from './routes/storage'
@@ -14,14 +15,15 @@ const logger = getLogger('app')
 
 export const app = express()
 
-// Setup DB in model when not in test env
 if (process.env.NODE_ENV !== 'test') {
+  // Setup DB in models when not in test env
   const db = new MongooseDB(dbUri)
   Upload.setDb(db)
+  Ffs.setDb(db)
+  // Setub basic endpoint logging
+  app.use(morgan('dev'))
 }
-
-// Setub basic endpoint logging, cors & JSON body parser
-app.use(morgan('dev'))
+// Setub cors & JSON body parser
 app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))

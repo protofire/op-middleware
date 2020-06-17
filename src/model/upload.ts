@@ -1,4 +1,5 @@
 import { getLogger } from '../util/logger'
+import { DB } from '../util/db'
 
 const logger = getLogger('router:model/upload')
 
@@ -20,19 +21,12 @@ const jobStatuses: JobStatus[] = [
 ]
 
 export interface IUpload {
-  ffsToken: string
   cid: string
   jobId: string
   jobStatus?: JobStatus
 }
 
-export interface DB {
-  saveUpload: (u: Upload) => Promise<unknown>
-  getUploadByCid: (cid: string) => Promise<IUpload>
-}
-
 export class Upload implements IUpload {
-  ffsToken: string
   cid: string
   jobId: string
   jobStatus: JobStatus
@@ -50,7 +44,6 @@ export class Upload implements IUpload {
   }
 
   constructor(u: IUpload) {
-    this.ffsToken = u.ffsToken
     this.cid = u.cid
     this.jobId = u.jobId
     this.jobStatus = u.jobStatus || 'NEW'

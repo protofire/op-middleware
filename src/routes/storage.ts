@@ -16,10 +16,7 @@ export async function addFile(
     const { file } = req
     logger({ file })
 
-    const pow = getClient() as PowClient
-    const { token } = await pow.ffs.create()
-    logger(`ffs token: ${token}`)
-    pow.setToken(token)
+    const pow = (await getClient()) as PowClient
 
     readFile(file.path, async (err, data) => {
       if (err) {
@@ -31,9 +28,9 @@ export async function addFile(
       const { jobId } = await pow.ffs.pushConfig(cid)
       logger(`jobId: ${jobId}`)
 
-      const upload = new Upload({ ffsToken: token, cid, jobId })
+      const upload = new Upload({ cid, jobId })
       logger(`Saving upload to DB:`)
-      logger({ ffsToken: token, cid, jobId })
+      logger({ cid, jobId })
       await upload.save()
       logger(`Saved upload with cid ${cid}`)
 
