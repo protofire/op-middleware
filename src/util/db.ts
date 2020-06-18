@@ -41,7 +41,7 @@ export interface DB {
   saveUpload: (u: Upload) => Promise<unknown>
   getUploadByCid: (cid: string) => Promise<IUpload>
   saveFfs: (f: IFfs) => Promise<unknown>
-  getFfs: () => Promise<IFfs>
+  getFfs: () => Promise<IFfs | null>
 }
 
 export class MongooseDB implements DB {
@@ -99,13 +99,9 @@ export class MongooseDB implements DB {
     }
   }
 
-  async getFfs(): Promise<IFfs> {
+  async getFfs(): Promise<IFfs | null> {
     try {
-      const f = await FfsModel.findOne()
-      if (f === null) {
-        throw new Error(`Could not find ffs in db`)
-      }
-      return f
+      return await FfsModel.findOne()
     } catch (err) {
       logger(`Error retrieving ffs`)
       logger(err)

@@ -30,6 +30,9 @@ export class Ffs {
   }
 
   static async get(): Promise<IFfs | null> {
+    if (Ffs.instance === null) {
+      Ffs.instance = await Ffs.getDb().getFfs()
+    }
     return Ffs.instance
   }
 }
