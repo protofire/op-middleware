@@ -1,9 +1,9 @@
 import { DB } from '../../../src/util/db'
-import { Upload } from '../../../src/model/upload'
+import { IUpload, Upload } from '../../../src/model/upload'
 import { IFfs } from '../../../src/model/ffs'
 
 export class MockedDB implements DB {
-  public uploads: Upload[]
+  public uploads: IUpload[]
   public ffs: IFfs | null
 
   constructor() {
@@ -11,12 +11,12 @@ export class MockedDB implements DB {
     this.ffs = null
   }
 
-  saveUpload(u: Upload): Promise<unknown> {
+  saveUpload(u: IUpload): Promise<IUpload> {
     this.uploads.push(new Upload(u))
     return Promise.resolve(u)
   }
 
-  getUploadByCid(cid: string): Promise<Upload> {
+  getUploadByCid(cid: string): Promise<IUpload> {
     const r = this.uploads.find((r) => r.cid === cid)
     return Promise.resolve(r as Upload)
   }

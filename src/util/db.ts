@@ -1,5 +1,5 @@
 import { Schema, Document, model, connect } from 'mongoose'
-import { IUpload, Upload } from '../model/upload'
+import { IUpload, Upload, JobStatus } from '../model/upload'
 import { IFfs } from '../model/ffs'
 import { getLogger } from './logger'
 
@@ -38,8 +38,8 @@ type FfsDocument = IFfs & Document
 const FfsModel = model<FfsDocument>('Ffs', FfsSchema)
 
 export interface DB {
-  saveUpload: (u: Upload) => Promise<unknown>
-  getUploadByCid: (cid: string) => Promise<IUpload>
+  saveUpload: (u: Upload) => Promise<IUpload>
+  getUploadByCid: (cid: string) => Promise<IUpload | null>
   saveFfs: (f: IFfs) => Promise<unknown>
   getFfs: () => Promise<IFfs | null>
 }
@@ -60,27 +60,34 @@ export class MongooseDB implements DB {
     })
   }
 
-  // @FIXME: should accept IUpload
-  async saveUpload(u: Upload): Promise<boolean> {
+  async saveUpload(u: IUpload): Promise<IUpload> {
     try {
-      const um = new UploadModel(u)
-      await um.save()
-      return true
+      const eu = await UploadModel.findOne({ cid: u.cid })
+      if (eu !== null) {
+        eu.cid = u.cid
+        eu.jobId = u.jobId
+        eu.jobStatus = u.jobStatus as JobStatus
+        await eu.save()
+        return eu
+      } else {
+        const nu = new UploadModel(u)
+        await nu.save()
+        return nu
+      }
     } catch (err) {
       logger(`Error saving upload ${JSON.stringify(u)}`)
       logger(err)
-      return false
+      throw err
     }
   }
 
-  // @FIXME: should return IUpload
-  async getUploadByCid(cid: string): Promise<IUpload> {
+  async getUploadByCid(cid: string): Promise<IUpload | null> {
     try {
       const r = await UploadModel.findOne({ cid })
       if (r === null) {
-        throw new Error(`Could not find upload with cid ${cid}`)
+        logger(`Could not find upload with cid ${cid}`)
       }
-      return new Upload(r)
+      return r
     } catch (err) {
       logger(`Error retrieving upload with cid ${cid}`)
       logger(err)

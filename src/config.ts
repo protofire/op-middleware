@@ -14,3 +14,9 @@ export const uploadMaxSize =
   process.env.MAX_FILE_SIZE !== undefined
     ? Number.parseInt(process.env.MAX_FILE_SIZE, 10)
     : 1024 * 1024 * 10
+
+// Cancel watch job after 30 mins (worst case scenario)
+export const jobWatchTimeout =
+  process.env.JOB_WATCH_TIMEOUT !== undefined
+    ? Number.parseInt(process.env.JOB_WATCH_TIMEOUT, 10)
+    : 1000 * 60 * 30

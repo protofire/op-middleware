@@ -3,20 +3,20 @@ import { DB } from '../util/db'
 
 const logger = getLogger('router:model/upload')
 
-type JobStatus =
+export type JobStatus =
   | 'NEW'
   | 'UNSPECIFIED'
   | 'QUEUED'
   | 'EXECUTING'
   | 'FAILED'
-  | 'CANCELED'
+  | 'CANCELLED'
   | 'SUCCESS'
-const jobStatuses: JobStatus[] = [
+export const jobStatuses: JobStatus[] = [
   'UNSPECIFIED',
   'QUEUED',
   'EXECUTING',
   'FAILED',
-  'CANCELED',
+  'CANCELLED',
   'SUCCESS',
 ]
 
@@ -43,6 +43,10 @@ export class Upload implements IUpload {
     return Upload.db as DB
   }
 
+  public static getJobStatus(s: number): JobStatus {
+    return jobStatuses[s]
+  }
+
   constructor(u: IUpload) {
     this.cid = u.cid
     this.jobId = u.jobId
@@ -55,7 +59,7 @@ export class Upload implements IUpload {
   }
 
   public setJobStatusByNumber(s: number): Upload {
-    this.jobStatus = jobStatuses[s]
+    this.jobStatus = Upload.getJobStatus(s)
     return this
   }
 

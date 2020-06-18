@@ -10,7 +10,7 @@
     "start": "npm run build && node build/server.js",
     "start:dev": "DEBUG=op-middleware:* nodemon --watch src -e ts,js --exec 'ts-node ./src/server.ts'",
     "test": "NODE_ENV=test jest --coverage --silent",
-    "test:watch": "NODE_ENV=test jest --coverage --watch"
+    "test:watch": "NODE_ENV=test jest --watch --runInBand --detectOpenHandles"
   },
   "repository": {
     "type": "git",
