@@ -11,14 +11,22 @@ export class MockedDB implements DB {
     this.ffs = null
   }
 
-  saveUpload(u: IUpload): Promise<IUpload> {
-    this.uploads.push(new Upload(u))
-    return Promise.resolve(u)
+  async saveUpload(u: IUpload): Promise<IUpload> {
+    let eu = await this.getUploadByCid(u.cid)
+    if (eu === null) {
+      this.uploads.push(new Upload(u))
+      eu = u
+    } else {
+      eu.cid = u.cid
+      eu.jobId = u.jobId
+      eu.jobStatus = u.jobStatus
+    }
+    return Promise.resolve(eu)
   }
 
-  getUploadByCid(cid: string): Promise<IUpload> {
+  getUploadByCid(cid: string): Promise<IUpload | null> {
     const r = this.uploads.find((r) => r.cid === cid)
-    return Promise.resolve(r as Upload)
+    return Promise.resolve(r ? (r as Upload) : null)
   }
 
   saveFfs(f: IFfs): Promise<unknown> {
