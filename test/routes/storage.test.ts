@@ -1,6 +1,6 @@
 import request from 'supertest'
-import mockfs from 'mock-fs'
 import { readFileSync, existsSync } from 'fs'
+import rimraf from 'rimraf'
 import { app } from '../../src/server'
 import { setClient } from '../../src/util/pow'
 import { Upload } from '../../src/model/upload'
@@ -15,11 +15,8 @@ describe('POST /storage', () => {
     Upload.setDb(db)
     Ffs.setDb(db)
   })
-  afterEach(() => {
-    mockfs.restore()
-  })
   const server = app.listen()
-  afterAll((done) => server.close(done))
+  afterAll((done) => rimraf(uploadPath, () => server.close(done)))
 
   const ffsId = 'anId'
   const ffsToken = 'aFfsToken'
@@ -124,11 +121,8 @@ describe('GET /storage/:cid', () => {
     Upload.setDb(db)
     Ffs.setDb(db)
   })
-  afterEach(() => {
-    mockfs.restore()
-  })
   const server = app.listen()
-  afterAll((done) => server.close(done))
+  afterAll((done) => rimraf(uploadPath, () => server.close(done)))
 
   it('responds with success', async () => {
     const cid = 'aCid'

@@ -4,3 +4,5 @@ coverage
 uploads
 
 **/*.swp
+
+.env

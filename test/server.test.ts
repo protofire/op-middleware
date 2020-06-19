@@ -1,6 +1,10 @@
 import request from 'supertest'
+import rimraf from 'rimraf'
 import { app } from '../src/server'
 import { setClient } from '../src/util/pow'
+import { uploadPath } from '../src/config'
+
+afterAll((done) => rimraf(uploadPath, done))
 
 describe('general server config', () => {
   const server = app.listen()

@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
+import dotenv from 'dotenv'
 import { getLogger } from './util/logger'
 import { ErrorStatus } from './util/errorStatus'
 import { Upload } from './model/upload'
@@ -16,6 +17,12 @@ const logger = getLogger('app')
 export const app = express()
 
 if (process.env.NODE_ENV !== 'test') {
+  // Load env variable values from .env
+  const dotenvConfig = dotenv.config()
+  if (dotenvConfig.error) {
+    throw dotenvConfig.error
+  }
+
   // Setup DB in models when not in test env
   const db = new MongooseDB(dbUri)
   Upload.setDb(db)
