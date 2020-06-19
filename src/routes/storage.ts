@@ -1,10 +1,11 @@
-import { readFile } from 'fs'
+import { promises } from 'fs'
 import { Router, Request, Response, NextFunction } from 'express'
 import { getLogger } from '../util/logger'
 import { multerUpload, uploadField } from '../middlewares/multerUpload'
 import { getClient, PowClient } from '../util/pow'
 import { Upload } from '../model/upload'
 import { ErrorStatus } from '../util/errorStatus'
+import { jobWatchTimeout } from '../config'
 
 export async function addFile(
   req: Request,
@@ -16,39 +17,76 @@ export async function addFile(
     const { file } = req
     logger({ file })
 
-    const pow = getClient() as PowClient
-    const { token } = await pow.ffs.create()
-    logger(`ffs token: ${token}`)
-    pow.setToken(token)
+    const pow = (await getClient()) as PowClient
 
-    readFile(file.path, async (err, data) => {
-      if (err) {
-        logger(err)
-        throw new Error(err.message)
-      }
-      const { cid } = await pow.ffs.addToHot(data)
-      logger(`cid: ${cid}`)
-      const { jobId } = await pow.ffs.pushConfig(cid)
-      logger(`jobId: ${jobId}`)
+    const data = await promises.readFile(file.path)
+    const { cid } = await pow.ffs.addToHot(data)
+    logger(`cid: ${cid}`)
 
-      const upload = new Upload({ ffsToken: token, cid, jobId })
-      logger(`Saving upload to DB:`)
-      logger({ ffsToken: token, cid, jobId })
+    // Rename file so its name matches the cid
+    const cidFilePath = `${file.destination}/${cid}`
+    promises.rename(file.path, cidFilePath)
+
+    // If cid is new, queue/push to confgi to start cold storing the file
+    if ((await Upload.getByCid(cid)) !== null) {
+      throw new ErrorStatus(`File already processed with cid: ${cid}`, 409)
+    }
+    const { jobId } = await pow.ffs.pushConfig(cid)
+
+    const upload = new Upload({
+      cid,
+      jobId,
+      originalName: file.originalname,
+      size: file.size,
+    })
+    logger(`Saving upload to DB:`)
+    logger({ cid, jobId })
+    await upload.save()
+    logger(`Saved upload with cid ${cid}`)
+
+    let isWatchActive = true
+    const cancelWatch = pow.ffs.watchJobs(async (job) => {
+      const { status } = job
+      logger(
+        `Updating job ${jobId} status ${
+          upload.jobStatus
+        } > ${Upload.getJobStatus(status)}`,
+      )
+      upload.setJobStatusByNumber(status)
       await upload.save()
-      logger(`Saved upload with cid ${cid}`)
-
-      pow.ffs.watchJobs(async (job) => {
-        const { status } = job
-        logger(`Updating job ${jobId} status ${upload.jobStatus} > ${status}`)
-        upload.setJobStatusByNumber(status)
+      logger(`Updated job ${jobId}`)
+      switch (upload.jobStatus) {
+        case 'FAILED':
+        case 'CANCELLED':
+        case 'SUCCESS':
+          logger(`Job ${jobId} finished, cancellig watch`)
+          cancelWatch()
+          isWatchActive = false
+          await promises.unlink(cidFilePath)
+      }
+    }, jobId)
+    // The jobStatus should change to failed/cancelled/success before
+    // jobWatchTimeout, if not, we force the cancel of the watch assuming
+    // something unexpected happened
+    setTimeout(async () => {
+      if (isWatchActive) {
+        logger(`Cancelling job ${jobId} watch due to inactivity`)
+        cancelWatch()
+        logger(`Updating job ${jobId} status ${upload.jobStatus} > UNSPECIFIED`)
+        upload.jobStatus = 'UNSPECIFIED'
         await upload.save()
         logger(`Updated job ${jobId}`)
-      }, jobId)
+        await promises.unlink(cidFilePath)
+      }
+    }, jobWatchTimeout)
 
-      res.send({
-        job: { jobId, cid },
-        file: { name: file.filename, size: file.size },
-      })
+    res.send({
+      job: { jobId, cid },
+      file: {
+        name: cidFilePath,
+        originalName: file.originalname,
+        size: file.size,
+      },
     })
   } catch (err) {
     logger(err)

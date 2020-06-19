@@ -1,21 +1,38 @@
 import { createPow } from '@textile/powergate-client'
 import { getLogger } from '../util/logger'
 import { powergateServerUri } from '../config'
+import { Ffs } from '../model/ffs'
 
 export declare type PowClient = ReturnType<typeof createPow>
 
 const logger = getLogger('util:pow')
 
-let client: undefined | PowClient | unknown
+let client: null | PowClient | unknown = null
 
-export function getClient(mock?: unknown): PowClient | unknown {
+export async function getClient(): Promise<PowClient | unknown> {
+  if (client !== null) {
+    return client
+  }
+
+  const options = { host: powergateServerUri }
+  logger(`Set powergate client: ${JSON.stringify(options)}`)
+  const c = createPow(options)
+
+  let f = await Ffs.get()
+  if (f === null) {
+    logger(`No ffs found in DB, creating and saving a new one`)
+    const { token, id } = await c.ffs.create()
+    f = await Ffs.save({ token, id })
+  }
+  logger(`Setting ffs token with id: ${f.id}`)
+  c.setToken(f.token)
+  client = c
+  return client
+}
+
+// Use only when testing
+export function setClient(mock: unknown): void {
   if (process.env.NODE_ENV === 'test' && mock !== undefined) {
     client = mock
   }
-  if (client === undefined) {
-    const options = { host: powergateServerUri }
-    logger(`Set powergate client: ${JSON.stringify(options)}`)
-    client = createPow(options)
-  }
-  return client
 }

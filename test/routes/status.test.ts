@@ -1,11 +1,11 @@
 import request from 'supertest'
 import { app } from '../../src/server'
-import { getClient } from '../../src/util/pow'
-
-const server = app.listen()
-afterAll((done) => server.close(done))
+import { setClient } from '../../src/util/pow'
 
 describe('GET /status', () => {
+  const server = app.listen()
+  afterAll((done) => server.close(done))
+
   it('responds with success', async () => {
     // Powergate status ok
     const mockedClient = {
@@ -13,7 +13,7 @@ describe('GET /status', () => {
         check: () => Promise.resolve({ status: 1 }),
       },
     }
-    getClient(mockedClient)
+    setClient(mockedClient)
     let r = await request(server).get('/status')
     expect(r.status).toBe(200)
     // Powergate status degraded
@@ -21,6 +21,7 @@ describe('GET /status', () => {
     r = await request(server).get('/status')
     expect(r.status).toBe(200)
   })
+
   it('responds with error', async () => {
     // Powergate status unspecified
     const mockedClient = {
@@ -28,7 +29,7 @@ describe('GET /status', () => {
         check: () => Promise.resolve({ status: 0 }),
       },
     }
-    getClient(mockedClient)
+    setClient(mockedClient)
     let r = await request(server).get('/status')
     expect(r.status).toBe(500)
     // Powergate status

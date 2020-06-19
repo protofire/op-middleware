@@ -1,18 +1,40 @@
-import { getClient } from '../../src/util/pow'
+import { setClient, getClient } from '../../src/util/pow'
+import { Ffs } from '../../src/model/ffs'
+import { MockedDB } from './__mocks__/db'
+
+jest.mock('@textile/powergate-client', () => {
+  const pow = {
+    ffs: {
+      create: () => Promise.resolve({ id: 'aId', token: 'aToken' }),
+    },
+    setToken: (t: string) => t,
+  }
+  return {
+    createPow: () => pow,
+  }
+})
 
 describe('util/pow', () => {
   describe('getClient', () => {
-    it('returns same instance', () => {
-      const p1 = getClient()
-      const p2 = getClient()
+    it('returns instance and creates Ffs if not set', async () => {
+      Ffs.setDb(new MockedDB())
+      expect(await Ffs.get()).toBeNull()
+      const pow = await getClient()
+      expect(pow).not.toBeNull()
+      expect(await Ffs.get()).not.toBeNull()
+    })
+    it('returns same existing instance', async () => {
+      setClient({})
+      const p1 = await getClient()
+      const p2 = await getClient()
       expect(p1).toStrictEqual(p2)
     })
-    it('accept setting mock client when process.node.NODE_ENV === "test"', () => {
-      const p1 = getClient()
-      const mock = {}
-      const p2 = getClient(mock)
-      expect(p2).not.toStrictEqual(p1)
-      expect(p2).toStrictEqual(mock)
+    it('accept setting mock client when process.node.NODE_ENV === "test"', async () => {
+      setClient({})
+      const p1 = await getClient()
+      setClient({ mock: 'client' })
+      const p2 = await getClient()
+      expect(p1).not.toStrictEqual(p2)
     })
   })
 })
