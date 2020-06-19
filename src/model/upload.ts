@@ -24,12 +24,16 @@ export interface IUpload {
   cid: string
   jobId: string
   jobStatus?: JobStatus
+  originalName: string
+  size: number
 }
 
 export class Upload implements IUpload {
   cid: string
   jobId: string
   jobStatus: JobStatus
+  originalName: string
+  size: number
 
   static db: DB | null = null
   public static setDb(db: DB): void {
@@ -51,6 +55,8 @@ export class Upload implements IUpload {
     this.cid = u.cid
     this.jobId = u.jobId
     this.jobStatus = u.jobStatus || 'NEW'
+    this.originalName = u.originalName
+    this.size = u.size
   }
 
   public async save(): Promise<unknown> {

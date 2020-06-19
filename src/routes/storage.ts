@@ -22,12 +22,23 @@ export async function addFile(
     const data = await promises.readFile(file.path)
     const { cid } = await pow.ffs.addToHot(data)
     logger(`cid: ${cid}`)
+
+    // Rename file so its name matches the cid
+    const cidFilePath = `${file.destination}/${cid}`
+    promises.rename(file.path, cidFilePath)
+
+    // If cid is new, queue/push to confgi to start cold storing the file
     if ((await Upload.getByCid(cid)) !== null) {
       throw new ErrorStatus(`File already processed with cid: ${cid}`, 409)
     }
     const { jobId } = await pow.ffs.pushConfig(cid)
 
-    const upload = new Upload({ cid, jobId })
+    const upload = new Upload({
+      cid,
+      jobId,
+      originalName: file.originalname,
+      size: file.size,
+    })
     logger(`Saving upload to DB:`)
     logger({ cid, jobId })
     await upload.save()
@@ -51,6 +62,7 @@ export async function addFile(
           logger(`Job ${jobId} finished, cancellig watch`)
           cancelWatch()
           isWatchActive = false
+          await promises.unlink(cidFilePath)
       }
     }, jobId)
     // The jobStatus should change to failed/cancelled/success before
@@ -64,12 +76,17 @@ export async function addFile(
         upload.jobStatus = 'UNSPECIFIED'
         await upload.save()
         logger(`Updated job ${jobId}`)
+        await promises.unlink(cidFilePath)
       }
     }, jobWatchTimeout)
 
     res.send({
       job: { jobId, cid },
-      file: { name: file.filename, size: file.size },
+      file: {
+        name: cidFilePath,
+        originalName: file.originalname,
+        size: file.size,
+      },
     })
   } catch (err) {
     logger(err)
