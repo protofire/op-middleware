@@ -24,7 +24,7 @@ export async function addFile(
     logger(`cid: ${cid}`)
 
     // Rename file so its name matches the cid
-    const cidFilePath = `${file.destination}/${cid}`
+    const cidFilePath = `${file.destination}${cid}`
     promises.rename(file.path, cidFilePath)
 
     // If cid is new, queue/push to confgi to start cold storing the file
@@ -45,6 +45,7 @@ export async function addFile(
     logger(`Saved upload with cid ${cid}`)
 
     let isWatchActive = true
+    let cancelWatchTimeout: NodeJS.Timeout
     const cancelWatch = pow.ffs.watchJobs(async (job) => {
       const { status } = job
       logger(
@@ -63,12 +64,13 @@ export async function addFile(
           cancelWatch()
           isWatchActive = false
           await promises.unlink(cidFilePath)
+          clearTimeout(cancelWatchTimeout)
       }
     }, jobId)
     // The jobStatus should change to failed/cancelled/success before
     // jobWatchTimeout, if not, we force the cancel of the watch assuming
     // something unexpected happened
-    setTimeout(async () => {
+    cancelWatchTimeout = setTimeout(async () => {
       if (isWatchActive) {
         logger(`Cancelling job ${jobId} watch due to inactivity`)
         cancelWatch()

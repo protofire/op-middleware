@@ -75,7 +75,7 @@ describe('POST /storage', () => {
   it('responds with 403', async () => {
     const f = {
       filename: 'example.txt',
-      content: 'Example content',
+      content: 'Example content 403',
     }
     const r = await request(server)
       .post(`/storage`)
@@ -83,6 +83,9 @@ describe('POST /storage', () => {
         filename: f.filename,
       })
     expect(r.status).toBe(200)
+    // Simulate upload job status update
+    mockedClient.updateJob()
+
     // Try to post the same content with different file name
     const f2 = { ...f, filename: 'example2.txt' }
     const r2 = await request(server)
