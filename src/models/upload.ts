@@ -1,5 +1,5 @@
-import { getLogger } from '../util/logger'
-import { DB } from '../util/db'
+import { getLogger } from '../helpers/logger'
+import { DB } from '../helpers/db'
 
 const logger = getLogger('router:model/upload')
 

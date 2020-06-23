@@ -1,4 +1,4 @@
-import { setClient, getClient } from '../../src/util/pow'
+import { setClient, getClient } from '../../src/helpers/pow'
 import { Ffs } from '../../src/models/ffs'
 import { MockedDB } from './__mocks__/db'
 

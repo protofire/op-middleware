@@ -1,5 +1,5 @@
 import { createPow } from '@textile/powergate-client'
-import { getLogger } from '../util/logger'
+import { getLogger } from './logger'
 import { powergateServerUri } from '../config'
 import { Ffs } from '../models/ffs'
 

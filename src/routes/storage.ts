@@ -1,10 +1,10 @@
 import { promises } from 'fs'
 import { Router, Request, Response, NextFunction } from 'express'
-import { getLogger } from '../util/logger'
+import { getLogger } from '../helpers/logger'
 import { multerUpload, uploadField } from '../middlewares/multerUpload'
-import { getClient, PowClient } from '../util/pow'
+import { getClient, PowClient } from '../helpers/pow'
 import { Upload } from '../models/upload'
-import { ErrorStatus } from '../util/errorStatus'
+import { ErrorStatus } from '../helpers/errorStatus'
 import { jobWatchTimeout } from '../config'
 
 export async function addFile(

@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { app } from '../../src/server'
-import { setClient } from '../../src/util/pow'
+import { setClient } from '../../src/helpers/pow'
 
 describe('GET /status', () => {
   const server = app.listen()

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express'
-import { getLogger } from '../util/logger'
-import { getClient, PowClient } from '../util/pow'
+import { getLogger } from '../helpers/logger'
+import { getClient, PowClient } from '../helpers/pow'
 
 export async function getStatus(
   req: Request,

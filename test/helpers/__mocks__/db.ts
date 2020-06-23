@@ -1,4 +1,4 @@
-import { DB } from '../../../src/util/db'
+import { DB } from '../../../src/helpers/db'
 import { IUpload, Upload } from '../../../src/models/upload'
 import { IFfs } from '../../../src/models/ffs'
 
