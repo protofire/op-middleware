@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
@@ -28,6 +29,7 @@ if (process.env.NODE_ENV !== 'test') {
   Upload.setDb(db)
   Ffs.setDb(db)
   // Setub basic endpoint logging
+  app.use(helmet())
   app.use(morgan('dev'))
 }
 // Setub cors & JSON body parser
