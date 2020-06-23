@@ -36,3 +36,8 @@ export function setClient(mock: unknown): void {
     client = mock
   }
 }
+
+export const healthStatuses = ['UNSPECIFIED', 'OK', 'DEGRADED', 'ERROR']
+export function getStringHealthStatus(s: number): string {
+  return healthStatuses[s]
+}

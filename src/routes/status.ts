@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { getLogger } from '../helpers/logger'
-import { getClient, PowClient } from '../helpers/pow'
+import { getClient, PowClient, getStringHealthStatus } from '../helpers/pow'
 import { uploadMaxSize } from '../config'
 
 export async function getStatus(
@@ -18,7 +18,7 @@ export async function getStatus(
       throw new Error('Node is in error or unspecified status')
     }
     // @TODO: add more verifications (e.g. balance check)
-    res.send({ status, uploadMaxSize })
+    res.send({ status: getStringHealthStatus(status), uploadMaxSize })
   } catch (err) {
     logger(err)
     next(err)

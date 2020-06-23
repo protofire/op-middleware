@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { app } from '../../src/server'
-import { setClient } from '../../src/helpers/pow'
+import { setClient, getStringHealthStatus } from '../../src/helpers/pow'
 import { uploadMaxSize } from '../../src/config'
 
 describe('GET /status', () => {
@@ -9,19 +9,24 @@ describe('GET /status', () => {
 
   it('responds with success', async () => {
     // Powergate status ok
+    let s = 1
     const mockedClient = {
       health: {
-        check: () => Promise.resolve({ status: 1 }),
+        check: () => Promise.resolve({ status: s }),
       },
     }
     setClient(mockedClient)
     let r = await request(server).get('/status')
     expect(r.status).toBe(200)
+    expect(r.body.status).toBe(getStringHealthStatus(s))
     expect(r.body.uploadMaxSize).toBe(uploadMaxSize)
     // Powergate status degraded
-    mockedClient.health.check = () => Promise.resolve({ status: 2 })
+    s = 2
+    mockedClient.health.check = () => Promise.resolve({ status: s })
     r = await request(server).get('/status')
     expect(r.status).toBe(200)
+    expect(r.body.status).toBe(getStringHealthStatus(s))
+    expect(r.body.uploadMaxSize).toBe(uploadMaxSize)
   })
 
   it('responds with error', async () => {
