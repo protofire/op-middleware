@@ -1,7 +1,7 @@
 import { createPow } from '@textile/powergate-client'
 import { getLogger } from '../util/logger'
 import { powergateServerUri } from '../config'
-import { Ffs } from '../model/ffs'
+import { Ffs } from '../models/ffs'
 
 export declare type PowClient = ReturnType<typeof createPow>
 

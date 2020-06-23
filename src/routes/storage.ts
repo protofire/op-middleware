@@ -3,7 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express'
 import { getLogger } from '../util/logger'
 import { multerUpload, uploadField } from '../middlewares/multerUpload'
 import { getClient, PowClient } from '../util/pow'
-import { Upload } from '../model/upload'
+import { Upload } from '../models/upload'
 import { ErrorStatus } from '../util/errorStatus'
 import { jobWatchTimeout } from '../config'
 

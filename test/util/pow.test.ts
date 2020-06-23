@@ -1,5 +1,5 @@
 import { setClient, getClient } from '../../src/util/pow'
-import { Ffs } from '../../src/model/ffs'
+import { Ffs } from '../../src/models/ffs'
 import { MockedDB } from './__mocks__/db'
 
 jest.mock('@textile/powergate-client', () => {

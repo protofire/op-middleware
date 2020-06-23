@@ -1,6 +1,6 @@
 import { Schema, Document, model, connect } from 'mongoose'
-import { IUpload, Upload, JobStatus } from '../model/upload'
-import { IFfs } from '../model/ffs'
+import { IUpload, Upload, JobStatus } from '../models/upload'
+import { IFfs } from '../models/ffs'
 import { getLogger } from './logger'
 
 const logger = getLogger('util:db')

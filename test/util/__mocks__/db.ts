@@ -1,6 +1,6 @@
 import { DB } from '../../../src/util/db'
-import { IUpload, Upload } from '../../../src/model/upload'
-import { IFfs } from '../../../src/model/ffs'
+import { IUpload, Upload } from '../../../src/models/upload'
+import { IFfs } from '../../../src/models/ffs'
 
 export class MockedDB implements DB {
   public uploads: IUpload[]
