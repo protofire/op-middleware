@@ -1,6 +1,7 @@
 import request from 'supertest'
 import { app } from '../../src/server'
 import { setClient } from '../../src/helpers/pow'
+import { uploadMaxSize } from '../../src/config'
 
 describe('GET /status', () => {
   const server = app.listen()
@@ -16,6 +17,7 @@ describe('GET /status', () => {
     setClient(mockedClient)
     let r = await request(server).get('/status')
     expect(r.status).toBe(200)
+    expect(r.body.uploadMaxSize).toBe(uploadMaxSize)
     // Powergate status degraded
     mockedClient.health.check = () => Promise.resolve({ status: 2 })
     r = await request(server).get('/status')
