@@ -1,0 +1,84 @@
+{
+	"info": {
+		"_postman_id": "5be8d69d-768a-40a1-a041-311d37ae2bfe",
+		"name": "op-middleware",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Upload service status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"status"
+					]
+				},
+				"description": "Retrieve op-middleware overall status: ideally, the consumer will query this before proceeding with the storage/upload endpoints."
+			},
+			"response": []
+		},
+		{
+			"name": "Upload file",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/topones10/Pictures/walls/DEFAULTWALL"
+						}
+					],
+					"options": {
+						"formdata": {}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/storage",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"storage"
+					]
+				},
+				"description": "Start storage of the corresponding file on Filecoin network and make it available via IPFS. The process Filecoin storage process is async so the consumer will have to query it's status using the CID returned in the body of the response generated here."
+			},
+			"response": []
+		},
+		{
+			"name": "Upload file status (by CID)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/storage/Qmaz2rjsi5TS3Z6B6dyMKdUCfcCr2KPsxi7NrGGzE6Z3yZ",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"storage",
+						"Qmaz2rjsi5TS3Z6B6dyMKdUCfcCr2KPsxi7NrGGzE6Z3yZ"
+					]
+				},
+				"description": "Provide information about the file storage process on Filecoin."
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

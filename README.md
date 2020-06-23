@@ -7,6 +7,7 @@ POC middleware to use Filecoin as a storage strategy.
 
 - [Install](#install)
 - [Usage](#usage)
+- [API](#api)
 - [Environmental assumptions](#Environmental-assumptions)
 - [Maintainers](#maintainers)
 - [Contributing](#contributing)
@@ -58,7 +59,11 @@ npm run start
 
 For more information, check the `script` attribute in the `package.json` file.
 
-## Notes about FIL management and local/remote network
+## API
+
+The file `op-middleware.postman_collection.json` in the root of the project is a [Postman](https://www.postman.com/) collection that details how the requests and endpoints work.
+
+## Environmental assumptions
 
 ### About FIL management and Powergate settings
 
