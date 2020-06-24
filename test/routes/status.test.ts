@@ -1,7 +1,7 @@
 import request from 'supertest'
 import { app } from '../../src/server'
 import { setClient, getStringHealthStatus } from '../../src/helpers/pow'
-import { uploadMaxSize } from '../../src/config'
+import { uploadMaxSize, maxPrice, dealMinDuration } from '../../src/config'
 
 describe('GET /status', () => {
   const server = app.listen()
@@ -26,7 +26,12 @@ describe('GET /status', () => {
     r = await request(server).get('/status')
     expect(r.status).toBe(200)
     expect(r.body.status).toBe(getStringHealthStatus(s))
+    expect(r.body.uploadMaxSize).toBeDefined()
     expect(r.body.uploadMaxSize).toBe(uploadMaxSize)
+    expect(r.body.maxPrice).toBe(maxPrice)
+    expect(r.body.maxPrice).toBeDefined()
+    expect(r.body.dealMinDuration).toBe(dealMinDuration)
+    expect(r.body.dealMinDuration).toBeDefined()
   })
 
   it('responds with error', async () => {

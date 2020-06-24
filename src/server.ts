@@ -3,7 +3,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
-import dotenv from 'dotenv'
+// import dotenv from 'dotenv'
 import { getLogger } from './helpers/logger'
 import { ErrorStatus } from './helpers/errorStatus'
 import { Upload } from './models/upload'
@@ -11,21 +11,31 @@ import { Ffs } from './models/ffs'
 import { MongooseDB } from './helpers/db'
 import { statusRouter } from './routes/status'
 import { storageRouter } from './routes/storage'
-import { port, dbUri } from './config'
+import * as config from './config'
 
 const logger = getLogger('app')
 
 export const app = express()
 
 if (process.env.NODE_ENV !== 'test') {
-  // Load env variable values from .env
-  const dotenvConfig = dotenv.config()
-  if (dotenvConfig.error) {
-    throw dotenvConfig.error
-  }
-
+  // Log env values (partially, the ones that are not secret) at strtup
+  const {
+    uploadPath,
+    uploadMaxSize,
+    maxPrice,
+    dealMinDuration,
+    jobWatchTimeout,
+  } = config
+  logger('Config values (partial/non-secret):')
+  logger({
+    uploadPath,
+    uploadMaxSize,
+    maxPrice,
+    dealMinDuration,
+    jobWatchTimeout,
+  })
   // Setup DB in models when not in test env
-  const db = new MongooseDB(dbUri)
+  const db = new MongooseDB(config.dbUri)
   Upload.setDb(db)
   Ffs.setDb(db)
   // Setub basic endpoint logging
@@ -66,6 +76,7 @@ app.use(
 
 // Start server (start listening only if outside tests)
 if (!module.parent) {
+  const { port } = config
   const server = app.listen(port)
   server.on('listening', function onListening(): void {
     logger(`Server listening on port ${port}`)

@@ -36,14 +36,14 @@ export async function addFile(
 
     // Set custom dealMinDuration and maxPrice
     const { defaultConfig } = await pow.ffs.defaultConfig()
-    logger(defaultConfig)
     if (defaultConfig && defaultConfig.cold && defaultConfig.cold.filecoin) {
       const { filecoin } = defaultConfig.cold
       filecoin.dealMinDuration = dealMinDuration || filecoin.dealMinDuration
       filecoin.maxPrice = maxPrice || filecoin.maxPrice
+      await pow.ffs.setDefaultConfig(defaultConfig as any)
     }
-    await pow.ffs.setDefaultConfig(defaultConfig as any)
-
+    logger(`Pushing ${cid} Powergate config:`)
+    logger(JSON.stringify(defaultConfig, undefined, 2))
     const { jobId } = await pow.ffs.pushConfig(cid)
 
     const upload = new Upload({

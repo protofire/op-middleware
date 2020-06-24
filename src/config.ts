@@ -1,30 +1,35 @@
-// op-middleware server port
-export const port = process.env.PORT || 3000
-
-export const powergateServerUri =
-  process.env.POWERGATE_SERVER_URI || 'http://0.0.0.0:6002'
-
-export const dbUri =
-  process.env.DB_URI || 'mongodb://localhost:27017/op_middleware'
-
+const envVarNames = [
+  'PORT',
+  'POWERGATE_SERVER_URI',
+  'DB_URI',
+  'UPLOADS_PATH',
+  'MAX_FILE_SIZE',
+  'MAX_PRICE',
+  'DEAL_MIN_DURATION',
+  'JOB_WATCH_TIMEOUT',
+]
+envVarNames.forEach((n) => {
+  if (process.env[n] === undefined) {
+    throw Error(`${n} not specified in env config`)
+  }
+})
+export const port = process.env.PORT as string
+export const powergateServerUri = process.env.POWERGATE_SERVER_URI as string
+export const dbUri = process.env.DB_URI as string
 // Default upload path is relative to the app path
-export const uploadPath = process.env.UPLOADS_PATH || 'uploads'
-// Default max file size is 10MB. Note that the size is expressed in bytes
-export const uploadMaxSize =
-  process.env.MAX_FILE_SIZE !== undefined
-    ? Number.parseInt(process.env.MAX_FILE_SIZE, 10)
-    : 1024 * 1024 * 10
-export const maxPrice =
-  process.env.MAX_PRICE !== undefined
-    ? Number.parseInt(process.env.MAX_PRICE, 10)
-    : undefined
-export const dealMinDuration =
-  process.env.DEAL_MIN_DURATION !== undefined
-    ? Number.parseInt(process.env.DEAL_MIN_DURATION, 10)
-    : undefined
-
-// Cancel watch job after 30 mins (worst case scenario)
-export const jobWatchTimeout =
-  process.env.JOB_WATCH_TIMEOUT !== undefined
-    ? Number.parseInt(process.env.JOB_WATCH_TIMEOUT, 10)
-    : 1000 * 60 * 30
+export const uploadPath = process.env.UPLOADS_PATH as string
+// Size is expressed in bytes
+export const uploadMaxSize = Number.parseInt(
+  process.env.MAX_FILE_SIZE as string,
+  10,
+)
+export const maxPrice = Number.parseInt(process.env.MAX_PRICE as string, 10)
+export const dealMinDuration = Number.parseInt(
+  process.env.DEAL_MIN_DURATION as string,
+  10,
+)
+// Expressed in milliseconds
+export const jobWatchTimeout = Number.parseInt(
+  process.env.JOB_WATCH_TIMEOUT as string,
+  10,
+)
