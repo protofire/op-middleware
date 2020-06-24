@@ -23,6 +23,7 @@ export async function getClient(): Promise<PowClient | unknown> {
     logger(`No ffs found in DB, creating and saving a new one`)
     const { token, id } = await c.ffs.create()
     f = await Ffs.save({ token, id })
+    logger('Ffs saved in DB')
   }
   logger(`Setting ffs token with id: ${f.id}`)
   c.setToken(f.token)

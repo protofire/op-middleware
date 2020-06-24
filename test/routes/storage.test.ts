@@ -33,6 +33,8 @@ describe('POST /storage', () => {
         mockedClient.updateJob = () => callback({ status: 5 })
         return () => null
       },
+      defaultConfig: () => Promise.resolve({}),
+      setDefaultConfig: () => Promise.resolve(),
     },
     setToken: () => null,
     updateJob: null,

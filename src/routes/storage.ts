@@ -5,7 +5,7 @@ import { multerUpload, uploadField } from '../middlewares/multerUpload'
 import { getClient, PowClient } from '../helpers/pow'
 import { Upload } from '../models/upload'
 import { ErrorStatus } from '../helpers/errorStatus'
-import { jobWatchTimeout } from '../config'
+import { jobWatchTimeout, dealMinDuration, maxPrice } from '../config'
 
 export async function addFile(
   req: Request,
@@ -27,10 +27,23 @@ export async function addFile(
     const cidFilePath = `${file.destination}${cid}`
     promises.rename(file.path, cidFilePath)
 
+    // @TODO: rename should happen after existing cid verification
+    // @TODO: if the cid exists but its status is FAILED/CANCELLED, re-try pushing
     // If cid is new, queue/push to confgi to start cold storing the file
     if ((await Upload.getByCid(cid)) !== null) {
       throw new ErrorStatus(`File already processed with cid: ${cid}`, 409)
     }
+
+    // Set custom dealMinDuration and maxPrice
+    const { defaultConfig } = await pow.ffs.defaultConfig()
+    logger(defaultConfig)
+    if (defaultConfig && defaultConfig.cold && defaultConfig.cold.filecoin) {
+      const { filecoin } = defaultConfig.cold
+      filecoin.dealMinDuration = dealMinDuration || filecoin.dealMinDuration
+      filecoin.maxPrice = maxPrice || filecoin.maxPrice
+    }
+    await pow.ffs.setDefaultConfig(defaultConfig as any)
+
     const { jobId } = await pow.ffs.pushConfig(cid)
 
     const upload = new Upload({
