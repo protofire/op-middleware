@@ -8,6 +8,7 @@ import { Ffs } from '../../src/models/ffs'
 import { MockedDB } from '../helpers/__mocks__/db'
 import { uploadField } from '../../src/middlewares/multerUpload'
 import { uploadPath } from '../../src/config'
+import { getMockedClient } from './__mocks__/powClient'
 
 describe('POST /storage', () => {
   beforeEach(() => {
@@ -22,23 +23,7 @@ describe('POST /storage', () => {
   const ffsToken = 'aFfsToken'
   const cid = 'aCid'
   const jobId = 'aJobId'
-  // @TODO: improve to match Partial<PowClient> from util/pow
-  const mockedClient: any = {
-    ffs: {
-      create: () => Promise.resolve({ token: ffsToken, id: ffsId }),
-      addToHot: () => Promise.resolve({ cid }),
-      pushConfig: () => Promise.resolve({ jobId }),
-      watchJobs: (callback: (job: { status: number }) => void) => {
-        // allow to update the job via a function
-        mockedClient.updateJob = () => callback({ status: 5 })
-        return () => null
-      },
-      defaultConfig: () => Promise.resolve({}),
-      setDefaultConfig: () => Promise.resolve(),
-    },
-    setToken: () => null,
-    updateJob: null,
-  }
+  const mockedClient = getMockedClient({ ffsId, ffsToken, cid, jobId })
   setClient(mockedClient)
 
   it('responds with success', async () => {
@@ -52,17 +37,16 @@ describe('POST /storage', () => {
         filename: f.filename,
       })
     expect(r.status).toBe(200)
-    const rbJob = r.body.job
-    expect(rbJob).toEqual({ jobId, cid })
-    const rbFile = r.body.file
-    expect(rbFile.size).toEqual(f.content.length)
+    expect(r.body.jobId).toEqual(jobId)
+    expect(r.body.cid).toEqual(cid)
+    expect(r.body.size).toEqual(f.content.length)
     // File should be renamed like cid
-    expect(readFileSync(`${uploadPath}/${cid}`, 'utf8')).toEqual(f.content)
+    const path = `${uploadPath}/${cid}`
+    expect(readFileSync(path, 'utf8')).toEqual(f.content)
 
     // Performing GET /storage/:cid should be ok
     const r2 = await request(server).get(`/storage/${cid}`)
     expect(r2.status).toBe(200)
-    // Check that new uploads' status is NEW
     expect(r2.body.status).toBe('NEW')
 
     // Simulate upload job status update
@@ -70,14 +54,13 @@ describe('POST /storage', () => {
     const r3 = await request(server).get(`/storage/${cid}`)
     expect(r3.status).toBe(200)
     expect(r3.body.status).toBe('SUCCESS')
-    // Upload job status is success, check that file was removed
-    expect(existsSync(`${uploadPath}/${rbFile.name}`)).toBeFalsy()
+    expect(existsSync(path)).toBeFalsy()
   })
 
-  it('responds with 403', async () => {
+  it('responds with 409', async () => {
     const f = {
       filename: 'example.txt',
-      content: 'Example content 403',
+      content: 'Example content 409',
     }
     const r = await request(server)
       .post(`/storage`)

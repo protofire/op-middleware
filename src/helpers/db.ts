@@ -32,6 +32,11 @@ const FfsSchema = new Schema({
     type: 'string',
     required: true,
   },
+  archived: {
+    type: 'boolean',
+    required: false,
+    default: false,
+  },
 })
 
 type FfsDocument = IFfs & Document

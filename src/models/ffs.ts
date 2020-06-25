@@ -6,6 +6,7 @@ const logger = getLogger('router:model/ffs')
 export interface IFfs {
   token: string
   id: string
+  archived?: boolean
 }
 
 export class Ffs {
@@ -34,5 +35,13 @@ export class Ffs {
       Ffs.instance = await Ffs.getDb().getFfs()
     }
     return Ffs.instance
+  }
+
+  static async archive(): Promise<unknown> {
+    Ffs.get()
+    if (Ffs.instance) {
+      Ffs.instance.archived = true
+      return Ffs.save(Ffs.instance)
+    }
   }
 }

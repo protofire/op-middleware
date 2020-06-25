@@ -42,3 +42,7 @@ export const healthStatuses = ['UNSPECIFIED', 'OK', 'DEGRADED', 'ERROR']
 export function getStringHealthStatus(s: number): string {
   return healthStatuses[s]
 }
+
+export async function archiveExistingFfs(): Promise<unknown> {
+  return Ffs.archive()
+}
