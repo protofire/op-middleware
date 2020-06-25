@@ -26,13 +26,9 @@ npm install
 
 op-middleware is an express/nodejs application that relies on Textile's Powergate and MongoDB (via Mongoose).
 
-The development environment is assumed to be running [Powergate's devnet setup](https://docs.textile.io/powergate/devnet/#devnet-with-powergate) plus a MongoDB instance. The setup of the components is documented on each project's repository but a [`docker-compose.yaml`](https://gist.github.com/unjapones/49a3ed76ef04472bc3cf1da512f4eb60) file has been created to make the development environment setup easier. To spin up the environment specified by the docker-compose file run the following (refer to [`docker`](https://docs.docker.com/engine/reference/run/) and [`docker-compose`](https://docs.docker.com/compose/reference/overview/) documentation for more information):
+The development environment is assumed to be running [Powergate's devnet setup](https://docs.textile.io/powergate/devnet/#devnet-with-powergate) plus a MongoDB instance. At the moment of writing this documentation, Powergate's tag [`v0.0.1-beta.10`](https://github.com/textileio/powergate/releases/tag/v0.0.1-beta.10) is assumed to be used.
 
-```sh
-docker-compose -p op-middleware-devnet -f docker-compose.yaml up
-```
-
-To configure the port that `op-middleware` will listen on for requests, the Powergate server URI, MongoDB connection URI and other environmental variables create a copy of the file `.env.example`, name the copy `.env` and edit the corresponding values.
+To configure the port that `op-middleware` will use to expect requests, the Powergate server URI, MongoDB connection URI and other environmental variables create a copy of the file `.env.example` named `.env` and edit the corresponding values.
 
 ```sh
 cp .env.example .env
@@ -57,7 +53,13 @@ Build the project and run it:
 npm run start
 ```
 
-For more information, check the `script` attribute in the `package.json` file.
+For further information about the npm scripts, check the `script` attribute in the `package.json` file.
+
+Alternatively, one can build and run the project using the following docker-compose command that will also spin up a MongoDB instance. Note that the environment variables defined in `docker-compose.yaml` will affect the `op-middleware` instance started this way:
+
+```sh
+docker-compose -p op-middleware -f docker-compose.yaml up
+```
 
 ## API
 
