@@ -8,9 +8,11 @@ import { getLogger } from './helpers/logger'
 import { ErrorStatus } from './helpers/errorStatus'
 import { Upload } from './models/upload'
 import { Ffs } from './models/ffs'
+import { IpfsDirectory } from './models/ipfsDirectory'
 import { MongooseDB } from './helpers/db'
 import { statusRouter } from './routes/status'
 import { storageRouter } from './routes/storage'
+import { ipfsRouter } from './routes/ipfs'
 import * as config from './config'
 
 const logger = getLogger('app')
@@ -38,6 +40,7 @@ if (process.env.NODE_ENV !== 'test') {
   const db = new MongooseDB(config.dbUri)
   Upload.setDb(db)
   Ffs.setDb(db)
+  IpfsDirectory.setDb(db)
   // Setub basic endpoint logging
   app.use(helmet())
   app.use(morgan('dev'))
@@ -50,6 +53,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // App routes
 app.use('/status', statusRouter)
 app.use('/storage', storageRouter)
+app.use('/ipfs', ipfsRouter)
 
 // Catch 404 errors
 app.use((req, res, next) => {
