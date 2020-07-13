@@ -1,14 +1,17 @@
 import { DB } from '../../../src/helpers/db'
 import { IUpload, Upload } from '../../../src/models/upload'
 import { IFfs } from '../../../src/models/ffs'
+import { IIpfsDirectory } from '../../../src/models/ipfsDirectory'
 
 export class MockedDB implements DB {
   public uploads: IUpload[]
   public ffs: IFfs | null
+  public ipfsDirectories: IIpfsDirectory[]
 
   constructor() {
     this.uploads = []
     this.ffs = null
+    this.ipfsDirectories = []
   }
 
   async saveUpload(u: IUpload): Promise<IUpload> {
@@ -36,5 +39,15 @@ export class MockedDB implements DB {
 
   async getFfs(): Promise<IFfs> {
     return Promise.resolve(this.ffs as IFfs)
+  }
+
+  saveIpfsDirectory(i: IIpfsDirectory): Promise<IIpfsDirectory> {
+    this.ipfsDirectories.push(i)
+    return Promise.resolve(i)
+  }
+
+  getIpfsDirectoryByJobId(jobId: string): Promise<IIpfsDirectory> {
+    const r = this.ipfsDirectories.find((i) => i.jobId === jobId)
+    return Promise.resolve(r as IIpfsDirectory)
   }
 }
