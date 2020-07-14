@@ -64,7 +64,7 @@ const IpfsDirectorySchema = new Schema({
     type: 'string',
     required: false,
   },
-  fileColdInfo: {
+  detail: {
     type: 'mixed',
     required: false,
   },
@@ -163,7 +163,7 @@ export class MongooseDB implements DB {
       if (e !== null) {
         e.jobId = i.jobId
         e.jobStatus = i.jobStatus as JobStatus
-        e.fileColdInfo = i.fileColdInfo
+        e.detail = i.detail
         await e.save()
         return e
       } else {

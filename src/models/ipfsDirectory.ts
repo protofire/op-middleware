@@ -10,7 +10,7 @@ export interface IIpfsDirectory {
   fileCid: string
   jobId: string
   jobStatus?: JobStatus
-  fileColdInfo?: any
+  detail?: any
 }
 
 export class IpfsDirectory implements IIpfsDirectory {
@@ -19,7 +19,7 @@ export class IpfsDirectory implements IIpfsDirectory {
   folderCid: string
   fileCid: string
   jobStatus?: JobStatus
-  fileColdInfo?: any
+  detail?: any
 
   static db: DB | null = null
   public static setDb(db: DB): void {
@@ -43,7 +43,7 @@ export class IpfsDirectory implements IIpfsDirectory {
     this.fileCid = i.fileCid
     this.jobId = i.jobId
     this.jobStatus = i.jobStatus || 'NEW'
-    this.fileColdInfo = i.fileColdInfo || undefined
+    this.detail = i.detail || undefined
   }
 
   public async save(): Promise<unknown> {

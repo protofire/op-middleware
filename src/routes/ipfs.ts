@@ -110,7 +110,7 @@ export async function getJobStatusArray(
       return {
         url: i.url,
         status: i.jobStatus as string,
-        detail: i.fileColdInfo,
+        detail: i.detail,
       }
     })
     res.send(statuses)
@@ -137,7 +137,7 @@ export async function getJobStatus(
       throw new Error(`IpfsDirectory with jobId: ${jobId} not found`)
     }
 
-    res.send({ url: i.url, status: i.jobStatus, detail: i.fileColdInfo })
+    res.send({ url: i.url, status: i.jobStatus, detail: i.detail })
   } catch (err) {
     logger(err)
     next(err)
@@ -174,7 +174,8 @@ async function watchJob(i: IpfsDirectory) {
   let cancelWatchTimeout: NodeJS.Timeout
   const cancelWatch = pow.ffs.watchJobs(async (job) => {
     const { status } = job
-    switch (Upload.getJobStatus(status)) {
+    const newJobStatus = Upload.getJobStatus(job.status)
+    switch (newJobStatus) {
       case 'SUCCESS':
       case 'FAILED':
       case 'CANCELLED':
@@ -182,21 +183,19 @@ async function watchJob(i: IpfsDirectory) {
         cancelWatch()
         isWatchActive = false
         clearTimeout(cancelWatchTimeout)
+        if (newJobStatus === 'FAILED' || newJobStatus === 'CANCELLED') {
+          i.detail = { error: `Job ${jobId} failed to store file in Filecoin` }
+        }
     }
     try {
       logger(`Retrieving info for cid: ${i.fileCid}`)
       const info = await pow.ffs.show(i.fileCid)
-      i.fileColdInfo =
-        info.cidInfo && info.cidInfo.cold && info.cidInfo.cold.filecoin
-      logger(i.fileColdInfo)
+      i.detail = info.cidInfo && info.cidInfo.cold && info.cidInfo.cold.filecoin
+      logger(i.detail)
     } catch (err) {
       logger('JobCidInfo not yet available')
     }
-    logger(
-      `Updating job ${jobId} status ${i.jobStatus} > ${Upload.getJobStatus(
-        status,
-      )}`,
-    )
+    logger(`Updating job ${jobId} status ${i.jobStatus} > ${newJobStatus}`)
     i.setJobStatusByNumber(status)
     i.save()
   }, jobId)
@@ -209,6 +208,7 @@ async function watchJob(i: IpfsDirectory) {
       cancelWatch()
       logger(`Updating job ${jobId} status ${i.jobStatus} > UNSPECIFIED`)
       i.jobStatus = 'UNSPECIFIED'
+      i.detail = { error: `Job watch timedout and was force-cancelled` }
       await i.save()
       logger(`Updated job ${jobId}`)
     }
