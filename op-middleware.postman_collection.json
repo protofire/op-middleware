@@ -78,6 +78,95 @@
 				"description": "Provide information about the file storage process on Filecoin."
 			},
 			"response": []
+		},
+		{
+			"name": "Queue Filecoin storage of ipfs:// urls",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\"ipfs://QmRVuo4e1jYikNxPfxdpi3mptUHRJr1MZaz1booGTGCKEd/Mate_en_calabaza.jpg\"]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/ipfs",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"ipfs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get queued Filecoin storage of ipfs:// urls statuses",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\"jobId1\", \"jobId2\"]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/ipfs/jobsstatusarray",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"ipfs",
+						"jobsstatusarray"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get individual queud Filecoin storage ipfs:// urls status",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\"ipfs://QmRVuo4e1jYikNxPfxdpi3mptUHRJr1MZaz1booGTGCKEd/Mate_en_calabaza.jpg\"]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/ipfs/${jobId}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"ipfs",
+						"${jobId}"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"protocolProfileBehavior": {}

@@ -10,6 +10,7 @@ services:
       - PORT=3333
       - POWERGATE_SERVER_URI=http://localhost:6002
       - DB_URI=mongodb://localhost:27317/op_middleware
+      - IPFS_API_URI=http://localhost:5001
       - UPLOADS_PATH=uploads
       - MAX_FILE_SIZE=10485760
       - JOB_WATCH_TIMEOUT=1800000
