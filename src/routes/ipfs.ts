@@ -1,9 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express'
-import axios from 'axios'
 import { getLogger } from '../helpers/logger'
-import { Upload } from '../models/upload'
+import { Upload, JobStatus } from '../models/upload'
 import { IpfsDirectory } from '../models/ipfsDirectory'
 import { getClient, PowClient } from '../helpers/pow'
+import { lsCid, LsResult } from '../helpers/oceanProtocol'
 import {
   jobWatchTimeout,
   dealMinDuration,
@@ -11,24 +11,13 @@ import {
   uploadMaxSize,
 } from '../config'
 
-type LsLink = {
-  Name: string
-  Hash: string
-  Size: number
-}
-type LsObject = {
-  Hash: string
-  Links: LsLink[]
-}
-type LsResult = {
-  Objects: LsObject[]
-}
 type FolderCid = {
   url: string
   folderCid: string
   fileCid?: string
   jobId?: string
-  status?: string
+  status?: JobStatus
+  detail?: any
 }
 
 export async function addFromIpfs(
@@ -39,90 +28,62 @@ export async function addFromIpfs(
   const logger = getLogger('router:ipfs/addFile')
   try {
     const { body } = req
+    // @TODO: validate that elements are ipfs:// urls
     logger({ body })
 
-    // @TODO:
-    // - validation (just assume everything is alright)
-    // - file could already have been stored in cold storage, prevent
-    // double cold storage (add ipfsentry to DB, model, etc)
-    const folderCids: FolderCid[] = body.map((u: string) => {
-      return {
-        url: u,
-        folderCid: u.split('/')[2],
-      }
-    })
+    // Create data structure to be returned in response
+    const result: FolderCid[] = body.map((url: string) => ({
+      url,
+      folderCid: url.split('/')[2],
+    }))
 
-    // Problems with this req (assume url is ok)
-    // - not found
-    // - timeout
-    // - other
-    // Get folder's unique file CID
-    const fLsPromises = folderCids.map(async (f: FolderCid) => {
-      try {
-        const r = await axios.post(
-          `http://localhost:5001/api/v0/ls?arg=${f.folderCid}`,
-          undefined,
-          {
-            timeout: 1500,
-          },
-        )
-        return r.data
-      } catch (err) {
-        logger(`Error while doing IFPS ls for folder with CID: ${f.folderCid}`)
-        return new Error('Error when retrieving IPFS folder content')
-      }
-    })
-    const fLsResults = (await Promise.all(fLsPromises)) as (LsResult | Error)[]
+    // Commons IPFS url is a file wrapped with a directory node; get file CID
+    const lsPromises = result.map((f: FolderCid) => lsCid(f.folderCid))
+    const lsResults = (await Promise.all(lsPromises)) as (LsResult | Error)[]
 
-    const coldStorageQueuePromises = fLsResults.map(
-      async (fLsResult: LsResult | Error, index: number) => {
+    await Promise.all(
+      lsResults.map(async (fLsResult: LsResult | Error, index: number) => {
+        const r = result[index]
         if (fLsResult instanceof Error) {
-          return { error: fLsResult.message }
+          r.status = 'FAILED'
+          r.detail = { error: `Failed IPFS ls on ${r.folderCid}` }
+          logger(`Failed to perform ls on ${r.url} folder`)
+          return
         }
 
-        const fileLink = fLsResult.Objects[0].Links[0]
-        folderCids[index].fileCid = fileLink.Hash
-        if (fileLink.Size > uploadMaxSize) {
-          logger(
-            `${fLsResult.Objects[0].Hash}/${fileLink.Hash} is ${fileLink.Size}, larger than ${uploadMaxSize}`,
-          )
-          return { error: `File on IPFS is larger than ${uploadMaxSize}` }
+        const ipfsFile = fLsResult.Objects[0].Links[0]
+        if (ipfsFile.Size > uploadMaxSize) {
+          r.status = 'FAILED'
+          r.detail = { error: `File on IPFS is larger than ${uploadMaxSize}` }
+          logger(`${r.url} size ${ipfsFile.Size} > ${uploadMaxSize}`)
+          return
         }
 
-        // - store in DB: directory CID, file CID
-        // - push file CID config enablingh cold storage
-        logger(
-          `Queue ${fLsResult.Objects[0].Hash}/${fileLink.Hash} is ${fileLink.Size}, config push for cold storage`,
-        )
-        const jobId = await pushCidConfig(fileLink.Hash)
-        const { url, folderCid, fileCid } = folderCids[index]
+        // @IMPROVEME: file exists in DB with SUCCESS?
+        // - do not save and return
+        // - else, queue push config
+
+        // Push cold storage config for file and save IpfsDirectory in DB
+        logger(`Push cold storage config for ${r.url}/${ipfsFile.Hash}`)
+        const jobId = await pushCidConfig(ipfsFile.Hash)
         const i = new IpfsDirectory({
-          url,
+          url: r.url,
           jobId,
-          folderCid,
-          fileCid: fileCid as string,
+          folderCid: r.folderCid,
+          fileCid: ipfsFile.Hash,
         })
-        folderCids[index].jobId = jobId
-        folderCids[index].status = i.jobStatus
         logger('Saving IpfsDirectory:')
         logger(i)
         await i.save()
         logger('IpfsDirectory saved successful')
         watchJob(i)
-        return jobId
-      },
-    )
-    const queueResults = await Promise.all(coldStorageQueuePromises)
 
-    const result: { [key: string]: string }[] = folderCids.map((f) => {
-      return {
-        url: f.url as string,
-        jobId: f.jobId as string,
-        status: f.status as string,
-      }
-    })
-    // - return array of coldStorage_queued / failed objects
-    //  - UI will show ok/fails, for oks (poll job statuses)
+        // Update info to be returned
+        r.jobId = jobId
+        r.status = i.jobStatus
+        return jobId
+      }),
+    )
     res.send(result)
   } catch (err) {
     logger(err)
@@ -149,7 +110,7 @@ export async function getJobStatusArray(
       return {
         url: i.url,
         status: i.jobStatus as string,
-        coldInfo: i.fileColdInfo,
+        detail: i.fileColdInfo,
       }
     })
     res.send(statuses)
@@ -176,7 +137,7 @@ export async function getJobStatus(
       throw new Error(`IpfsDirectory with jobId: ${jobId} not found`)
     }
 
-    res.send({ status: i.jobStatus, coldInfo: i.fileColdInfo })
+    res.send({ url: i.url, status: i.jobStatus, detail: i.fileColdInfo })
   } catch (err) {
     logger(err)
     next(err)

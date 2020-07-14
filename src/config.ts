@@ -2,6 +2,7 @@ const envVarNames = [
   'PORT',
   'POWERGATE_SERVER_URI',
   'DB_URI',
+  'IPFS_API_URI',
   'UPLOADS_PATH',
   'MAX_FILE_SIZE',
   'MAX_PRICE',
@@ -16,6 +17,7 @@ envVarNames.forEach((n) => {
 export const port = process.env.PORT as string
 export const powergateServerUri = process.env.POWERGATE_SERVER_URI as string
 export const dbUri = process.env.DB_URI as string
+export const ipfsApiUri = process.env.IPFS_API_URI as string
 // Default upload path is relative to the app path
 export const uploadPath = process.env.UPLOADS_PATH as string
 // Size is expressed in bytes
