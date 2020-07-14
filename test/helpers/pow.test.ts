@@ -14,7 +14,7 @@ jest.mock('@textile/powergate-client', () => {
   }
 })
 
-describe('util/pow', () => {
+describe('helpers/pow', () => {
   describe('getClient', () => {
     it('returns instance and creates Ffs if not set', async () => {
       Ffs.setDb(new MockedDB())

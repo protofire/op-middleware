@@ -44,10 +44,14 @@ describe('POST /ipfs', () => {
     const arr = r.body as any[]
     expect(arr.length).toEqual(ipfsUrls.length)
     arr.forEach(
-      (a: { url: string; jobId: string; status: string }, i: number) => {
+      (
+        a: { url: string; jobId: string; status: string; fileCid: string },
+        i: number,
+      ) => {
         expect(a.url).toBe(ipfsUrls[i])
         expect(a.jobId).toBe('aJobId')
         expect(a.status).toBe('NEW')
+        expect(a.fileCid).toBe(`fileCid${i + 1}`)
       },
     )
   })
@@ -115,5 +119,87 @@ describe('POST /ipfs', () => {
       .set('Accept', 'application/json')
       .send({ fail: 'with 500' })
     expect(r.status).toBe(500)
+  })
+})
+
+describe('GET /ipfs/:jobId', () => {
+  beforeEach(() => {
+    const db = new MockedDB()
+    IpfsDirectory.setDb(db)
+    Ffs.setDb(db)
+  })
+  const server = app.listen()
+  afterAll((done) => server.close(done))
+
+  it('responds with success', async () => {
+    const jobId = 'aJobId'
+    const i = new IpfsDirectory({
+      url: 'aUrl',
+      folderCid: 'aFolderCid',
+      fileCid: 'aFileCid',
+      jobId,
+      detail: { test: 'test' },
+    })
+    await i.save()
+    const r = await request(server).get(`/ipfs/${jobId}`)
+    expect(r.status).toBe(200)
+  })
+
+  it('responds with 404 error', async () => {
+    const r = await request(server).get(`/ipfs/inexistentJobId`)
+    expect(r.status).toBe(404)
+  })
+})
+
+describe('POST /ipfs/jobsstatusarray', () => {
+  beforeEach(() => {
+    const db = new MockedDB()
+    IpfsDirectory.setDb(db)
+    Ffs.setDb(db)
+  })
+  const server = app.listen()
+  afterAll((done) => server.close(done))
+
+  it('responds with success', async () => {
+    const i1 = new IpfsDirectory({
+      url: 'url1',
+      folderCid: 'rolderCid1',
+      fileCid: 'fileCid1',
+      jobId: 'jobId1',
+      detail: { test: 'test' },
+    })
+    const i2 = new IpfsDirectory({
+      url: 'url2',
+      folderCid: 'rolderCid2',
+      fileCid: 'fileCid2',
+      jobId: 'jobId2',
+      detail: { test: 'test' },
+    })
+    await Promise.all([i1.save(), i2.save()])
+    const r = await request(server)
+      .post(`/ipfs/jobsstatusarray`)
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .send([i1.jobId, i2.jobId])
+    expect(r.status).toBe(200)
+  })
+
+  it('responds with success to not found jobIds', async () => {
+    const i1 = new IpfsDirectory({
+      url: 'url1',
+      folderCid: 'rolderCid1',
+      fileCid: 'fileCid1',
+      jobId: 'jobId1',
+      detail: { test: 'test' },
+    })
+    await i1.save()
+    const r = await request(server)
+      .post(`/ipfs/jobsstatusarray`)
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .send([i1.jobId, 'nonExistentJobId'])
+    expect(r.status).toBe(200)
+    // The info entry of the not-found/non-existent jobId will be null
+    expect(r.body[1]).toBeNull()
   })
 })

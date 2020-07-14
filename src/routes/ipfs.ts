@@ -10,6 +10,7 @@ import {
   maxPrice,
   uploadMaxSize,
 } from '../config'
+import { ErrorStatus } from '../helpers/errorStatus'
 
 type FolderCid = {
   url: string
@@ -79,7 +80,8 @@ export async function addFromIpfs(
         watchJob(i)
 
         // Update info to be returned
-        r.jobId = jobId
+        r.fileCid = i.fileCid
+        r.jobId = i.jobId
         r.status = i.jobStatus
         return jobId
       }),
@@ -102,16 +104,27 @@ export async function getJobStatusArray(
 
     logger(`Retrieving ipfs cold storage job statuses for:`)
     logger(body)
-    const getPromises = body.map((j: string) => IpfsDirectory.getByJobId(j))
-    const ipfsDirectories = (await Promise.all(getPromises)) as IpfsDirectory[]
-    logger('Found all ipfs directores:')
+    const getPromises = body.map(async (j: string) =>
+      IpfsDirectory.getByJobId(j),
+    )
+    const ipfsDirectories = (await Promise.all(
+      getPromises,
+    )) as (IpfsDirectory | null)[]
+    if (ipfsDirectories.every((i: IpfsDirectory | null) => i !== null)) {
+      logger('Found all ipfs directores')
+    } else {
+      logger('Some ipfs directores were not found')
+    }
 
-    const statuses = ipfsDirectories.map((i: IpfsDirectory) => {
-      return {
-        url: i.url,
-        status: i.jobStatus as string,
-        detail: i.detail,
-      }
+    const statuses = ipfsDirectories.map((i: IpfsDirectory | null) => {
+      return i === null
+        ? null
+        : {
+            url: i.url,
+            fileCid: i.fileCid,
+            status: i.jobStatus as string,
+            detail: i.detail,
+          }
     })
     res.send(statuses)
   } catch (err) {
@@ -134,10 +147,15 @@ export async function getJobStatus(
     logger('Found ipfs directory:')
     logger(i)
     if (i === null) {
-      throw new Error(`IpfsDirectory with jobId: ${jobId} not found`)
+      throw new ErrorStatus('IpfsDirectory with jobId: ${jobId} not found', 404)
     }
 
-    res.send({ url: i.url, status: i.jobStatus, detail: i.detail })
+    res.send({
+      url: i.url,
+      status: i.jobStatus,
+      detail: i.detail,
+      fileCid: i.fileCid,
+    })
   } catch (err) {
     logger(err)
     next(err)
