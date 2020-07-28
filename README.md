@@ -1,7 +1,8 @@
 # op-middleware
 
+POC middleware to [allow Ocean Protocol Commons marketplace back IPFS files in Filecoin network](https://gist.github.com/mgarciap/63914166df3946b344a54f88318cbc22).
 
-POC middleware to use Filecoin as a storage strategy.
+The middleware is meant to run alongside with Ocean Protocol Commons. To that end a special fork has been created to make evident what the middleware does and the interaction with Filecoin (a deeper and full integration can be performed at the Brizo level, which may be more suitable for private/special marketplaces).
 
 ## Table of Contents
 
@@ -27,6 +28,8 @@ npm install
 op-middleware is an express/nodejs application that relies on Textile's Powergate and MongoDB (via Mongoose).
 
 The development environment is assumed to be running [Powergate's devnet setup](https://docs.textile.io/powergate/devnet/#devnet-with-powergate) plus a MongoDB instance. At the moment of writing this documentation, Powergate's tag [`v0.0.1-beta.10`](https://github.com/textileio/powergate/releases/tag/v0.0.1-beta.10) is assumed to be used.
+
+A separate file in this repository describes [how to setup the development environment](DEVELOPMENT_ENVIRONMENT_SETUP.md).
 
 To configure the port that `op-middleware` will use to expect requests, the Powergate server URI, MongoDB connection URI and other environmental variables create a copy of the file `.env.example` named `.env` and edit the corresponding values.
 
